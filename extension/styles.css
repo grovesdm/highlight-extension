@@ -1,0 +1,46 @@
+:root {
+    /* Light mode colors */
+    --highlight-yellow: #fee086;
+    --highlight-red: #f4b3b1;
+    --highlight-green: #cff09f;
+    --highlight-blue: #cee8f9;
+
+    /* Light mode opacity */
+    --highlight-opacity: 0.7;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        /* Dark mode colors (slightly adjusted for better visibility) */
+        --highlight-yellow: #ffeb99;
+        --highlight-red: #ffb3b3;
+        --highlight-green: #d6ffb3;
+        --highlight-blue: #b3e0ff;
+
+        /* Dark mode opacity */
+        --highlight-opacity: 0.25;
+    }
+}
+
+.text-highlighter-span {
+    display: inline;
+    padding: 2px 0;
+    position: relative;
+    z-index: 1;
+}
+
+.text-highlighter-span[data-color="#fee086"] {
+    background-color: rgba(var(--highlight-yellow), var(--highlight-opacity));
+}
+
+.text-highlighter-span[data-color="#f4b3b1"] {
+    background-color: rgba(var(--highlight-red), var(--highlight-opacity));
+}
+
+.text-highlighter-span[data-color="#cff09f"] {
+    background-color: rgba(var(--highlight-green), var(--highlight-opacity));
+}
+
+.text-highlighter-span[data-color="#cee8f9"] {
+    background-color: rgba(var(--highlight-blue), var(--highlight-opacity));
+}
