@@ -158,12 +158,3 @@ chrome.runtime.onInstalled.addListener(() => {
     });
 });
 
-// Set icon for the context menu
-chrome.runtime.onInstalled.addListener(() => {
-    chrome.contextMenus.update("addHighlight", {
-        icons: {
-            "16": "icons/icon_yellow_16.png",
-            "32": "icons/icon_yellow_48.png"  // Using 48px as 32px since it's the closest size we have
-        }
-    });
-});

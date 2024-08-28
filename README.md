@@ -91,3 +91,9 @@ This extension has been made using icons from Flaticon.com
 ## Contact
 
 [Your contact information or support channels]
+
+-- 
+
+# TODO Need to improve highlight colors for dark mode.
+# TODO Note working on Claude.ai
+- It shouldnt work on popups. Like lightboxes and stuff. 
