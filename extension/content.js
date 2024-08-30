@@ -22,13 +22,17 @@ function highlightSelection(color = currentColor) {
 
 // Save highlights in Chrome storage
 function saveHighlights() {
-    const highlights = Array.from(document.querySelectorAll('.text-highlighter-span')).map(span => ({
-        text: span.textContent,
-        color: span.dataset.color,
-        parentSelector: getUniqueSelector(span.parentNode),
-        textContent: span.parentNode.textContent,
-        startOffset: span.parentNode.textContent.indexOf(span.textContent)
-    }));
+    const highlights = Array.from(document.querySelectorAll('.text-highlighter-span')).map(span => {
+        const { beforeText, afterText } = getSurroundingText(span.parentNode, span.textContent);
+        return {
+            text: span.textContent,
+            color: span.dataset.color,
+            beforeText,
+            afterText,
+            parentTag: span.parentNode.tagName.toLowerCase(),
+            parentIndex: Array.from(span.parentNode.parentNode.children).indexOf(span.parentNode)
+        };
+    });
 
     chrome.storage.local.set({ [getStorageKey()]: highlights }, () => {
         console.log('Highlights saved:', highlights.length);
@@ -50,43 +54,34 @@ function loadHighlights() {
 
 // Apply all highlights
 function applyHighlights(highlights) {
-    // Remove existing highlights
-    document.querySelectorAll('.text-highlighter-span').forEach(span => {
-        const parent = span.parentNode;
-        while (span.firstChild) {
-            parent.insertBefore(span.firstChild, span);
-        }
-        parent.removeChild(span);
-    });
-
-    // Apply new highlights
     highlights.forEach(highlight => {
-        const parentElement = document.querySelector(highlight.parentSelector);
-        if (parentElement && parentElement.textContent.includes(highlight.text)) {
-            const range = document.createRange();
-            const textNode = Array.from(parentElement.childNodes).find(node =>
-                node.nodeType === Node.TEXT_NODE && node.textContent.includes(highlight.text)
-            );
+        const potentialParents = Array.from(document.getElementsByTagName(highlight.parentTag));
+        for (const parent of potentialParents) {
+            if (parent.textContent.includes(highlight.beforeText + highlight.text + highlight.afterText)) {
+                const range = document.createRange();
+                const textNode = Array.from(parent.childNodes).find(node =>
+                    node.nodeType === Node.TEXT_NODE && node.textContent.includes(highlight.text)
+                );
 
-            if (textNode) {
-                const startOffset = textNode.textContent.indexOf(highlight.text);
-                range.setStart(textNode, startOffset);
-                range.setEnd(textNode, startOffset + highlight.text.length);
+                if (textNode) {
+                    const startOffset = textNode.textContent.indexOf(highlight.text);
+                    range.setStart(textNode, startOffset);
+                    range.setEnd(textNode, startOffset + highlight.text.length);
 
-                const span = document.createElement("span");
-                span.classList.add('text-highlighter-span');
-                span.style.backgroundColor = highlight.color;
-                span.dataset.color = highlight.color;
+                    const span = document.createElement("span");
+                    span.classList.add('text-highlighter-span');
+                    span.style.backgroundColor = highlight.color;
+                    span.dataset.color = highlight.color;
 
-                try {
-                    range.surroundContents(span);
-                    console.log('Highlight applied:', span);
-                } catch (error) {
-                    console.error('Error applying highlight:', error);
+                    try {
+                        range.surroundContents(span);
+                        console.log('Highlight applied:', span);
+                    } catch (error) {
+                        console.error('Error applying highlight:', error);
+                    }
+                    break;
                 }
             }
-        } else {
-            console.error('Could not find parent element or text for highlight');
         }
     });
 
@@ -173,10 +168,36 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 });
 
+// Listen for messages from content script
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "getExtensionState") {
+        sendResponse({
+            isActive: currentState !== 'off',
+            color: COLOR_STATES[currentState].color
+        });
+    } else if (request.action === "setStateFromShortcut") {
+        setState(request.state);
+        updateIcon(sender.tab.id);
+        updateTabState(sender.tab.id);
+        updateContextMenu(sender.tab.id);
+    } else if (request.action === "turnOff") {
+        setState('off');
+        updateIcon(sender.tab.id);
+        updateTabState(sender.tab.id);
+        updateContextMenu(sender.tab.id);
+    }
+});
+
 // Event listener for keyboard shortcuts
 document.addEventListener('keydown', (event) => {
-    if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
-        return; // Don't trigger shortcuts when typing in input fields
+    // Check if the active element is an input field, textarea, or has contenteditable attribute
+    const isEditableElement =
+        event.target.tagName === 'INPUT' ||
+        event.target.tagName === 'TEXTAREA' ||
+        event.target.isContentEditable;
+
+    if (isEditableElement) {
+        return; // Don't trigger shortcuts when typing in editable fields
     }
 
     switch (event.key.toLowerCase()) {
@@ -201,6 +222,18 @@ document.addEventListener('keydown', (event) => {
             break;
     }
 });
+
+// Function to update tab state and send message to content script
+function updateTabState(tabId) {
+    const isActive = currentState !== 'off';
+    extensionState[tabId] = isActive;
+    chrome.tabs.sendMessage(tabId, {
+        action: 'updateExtensionState',
+        isActive: isActive,
+        color: COLOR_STATES[currentState].color
+    });
+    console.log('Extension state updated for tab', tabId, ':', currentState);
+}
 
 // Function to clear page highlights
 function clearPageHighlights() {
@@ -268,6 +301,16 @@ document.addEventListener('contextmenu', function(e) {
         });
     }
 });
+
+// Function to get surrounding text
+function getSurroundingText(node, text, windowSize = 50) {
+    const fullText = node.textContent;
+    const startIndex = fullText.indexOf(text);
+    const endIndex = startIndex + text.length;
+    const beforeText = fullText.substring(Math.max(0, startIndex - windowSize), startIndex);
+    const afterText = fullText.substring(endIndex, Math.min(fullText.length, endIndex + windowSize));
+    return { beforeText, afterText };
+}
 
 // Initialize extension state
 chrome.runtime.sendMessage({ action: "getExtensionState" }, function(response) {

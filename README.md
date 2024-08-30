@@ -95,5 +95,9 @@ This extension has been made using icons from Flaticon.com
 -- 
 
 # TODO Need to improve highlight colors for dark mode.
-# TODO Note working on Claude.ai
-- It shouldnt work on popups. Like lightboxes and stuff. 
+# TODO Not working on Claude.ai
+# TODO It shouldn't work on popups. Like lightboxes and stuff. 
+# TODO Need a purge option. Older than 12 months and all
+# TODO Should be able to allow in private windows. 
+# TODO need an option to disable completely. Should be right click on icon option. 
+- [ ] Shortcuts are still working when typing in claude
