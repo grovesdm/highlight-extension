@@ -11,14 +11,13 @@
 
 @media (prefers-color-scheme: dark) {
     :root {
-        /* Dark mode colors (slightly adjusted for better visibility) */
-        --highlight-yellow: #ffeb99;
-        --highlight-red: #ffb3b3;
-        --highlight-green: #d6ffb3;
-        --highlight-blue: #b3e0ff;
+        /* Dark mode colors (adjusted for better readability) */
+        --highlight-yellow: rgba(255, 235, 153, 0.5);  /* Softer yellow */
+        --highlight-red: rgba(255, 179, 179, 0.5);     /* Softer red */
+        --highlight-green: rgba(214, 255, 179, 0.5);   /* Softer green */
+        --highlight-blue: rgba(179, 224, 255, 0.5);    /* Softer blue */
 
-        /* Dark mode opacity */
-        --highlight-opacity: 0.25;
+        /* Dark mode opacity (removed as we're using rgba) */
     }
 }
 
@@ -30,17 +29,25 @@
 }
 
 .text-highlighter-span[data-color="#fee086"] {
-    background-color: rgba(var(--highlight-yellow), var(--highlight-opacity));
+    background-color: var(--highlight-yellow);
 }
 
 .text-highlighter-span[data-color="#f4b3b1"] {
-    background-color: rgba(var(--highlight-red), var(--highlight-opacity));
+    background-color: var(--highlight-red);
 }
 
 .text-highlighter-span[data-color="#cff09f"] {
-    background-color: rgba(var(--highlight-green), var(--highlight-opacity));
+    background-color: var(--highlight-green);
 }
 
 .text-highlighter-span[data-color="#cee8f9"] {
-    background-color: rgba(var(--highlight-blue), var(--highlight-opacity));
+    background-color: var(--highlight-blue);
+}
+
+/* Add styles for better text visibility in dark mode */
+@media (prefers-color-scheme: dark) {
+    .text-highlighter-span {
+        color: #000;  /* Set text color to black for better contrast */
+        text-shadow: 0 0 2px rgba(255, 255, 255, 0.5);  /* Add a subtle white glow */
+    }
 }
